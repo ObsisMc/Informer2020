@@ -14,7 +14,7 @@ class PositionalEmbedding(nn.Module):
         position = torch.arange(0, max_len).float().unsqueeze(1)
         div_term = (torch.arange(0, d_model, 2).float() * -(math.log(10000.0) / d_model)).exp()
 
-        pe[:, 0::2] = torch.sin(position * div_term)
+        pe[:, 0::2] = torch.sin(position * div_term)  # Obsismc: sin(position_idx * e^{-(2k*log(10000)) / d_model})
         pe[:, 1::2] = torch.cos(position * div_term)
 
         pe = pe.unsqueeze(0)
@@ -23,6 +23,7 @@ class PositionalEmbedding(nn.Module):
     def forward(self, x):
         return self.pe[:, :x.size(1)]
 
+# Obsismc: just a 1D conv
 class TokenEmbedding(nn.Module):
     def __init__(self, c_in, d_model):
         super(TokenEmbedding, self).__init__()
@@ -34,9 +35,11 @@ class TokenEmbedding(nn.Module):
                 nn.init.kaiming_normal_(m.weight,mode='fan_in',nonlinearity='leaky_relu')
 
     def forward(self, x):
+        # Obsismc: x (B, seq_len, N)
         x = self.tokenConv(x.permute(0, 2, 1)).transpose(1,2)
         return x
 
+# Obsismc: using PositionEmbedding to build temporalEmbedding
 class FixedEmbedding(nn.Module):
     def __init__(self, c_in, d_model):
         super(FixedEmbedding, self).__init__()
@@ -56,6 +59,7 @@ class FixedEmbedding(nn.Module):
     def forward(self, x):
         return self.emb(x).detach()
 
+# Obsismc: refer to Appendix B in paper, get temporal embedding
 class TemporalEmbedding(nn.Module):
     def __init__(self, d_model, embed_type='fixed', freq='h'):
         super(TemporalEmbedding, self).__init__()
@@ -82,6 +86,7 @@ class TemporalEmbedding(nn.Module):
         
         return hour_x + weekday_x + day_x + month_x + minute_x
 
+# Obsismc: just a fc
 class TimeFeatureEmbedding(nn.Module):
     def __init__(self, d_model, embed_type='timeF', freq='h'):
         super(TimeFeatureEmbedding, self).__init__()
