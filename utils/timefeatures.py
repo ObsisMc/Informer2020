@@ -148,4 +148,10 @@ def time_features(dates, timeenc=1, freq='h'):
         return dates[freq_map[freq.lower()]].values
     if timeenc==1:
         dates = pd.to_datetime(dates.date.values)
+        # Obsismc:
+        # dates' format is like "2012-01-01 00:00:00", type is DatetimeIndex
+        # if freq is 'h', a DatetimeIndex will be transfer into [Hour of day, day of week, day of month, day of year]
+        # the conversion formulas are classes above like 'class HourOfDay()'
+        # for example '00:00:00' will be converted into -5.0 in HourOfDay()
+        # return: shape is (time, N)
         return np.vstack([feat(dates) for feat in time_features_from_frequency_str(freq)]).transpose(1,0)

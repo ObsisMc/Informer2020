@@ -257,9 +257,12 @@ class Exp_Informer(Exp_Basic):
         return
 
     def _process_one_batch(self, dataset_object, batch_x, batch_y, batch_x_mark, batch_y_mark):
+        # Obsismc:
+        # batch_x, batch_x_mark: (b, seq_len, N)
+        # batch_y, batch_y_mark: (b, label_len+pre_len, N)
         batch_x = batch_x.float().to(self.device)
         batch_y = batch_y.float()
-
+        # Obsismc: timestamp
         batch_x_mark = batch_x_mark.float().to(self.device)
         batch_y_mark = batch_y_mark.float().to(self.device)
 
@@ -268,6 +271,7 @@ class Exp_Informer(Exp_Basic):
             dec_inp = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         elif self.args.padding==1:
             dec_inp = torch.ones([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
+        # Obsismc: mask the part needed to predict
         dec_inp = torch.cat([batch_y[:,:self.args.label_len,:], dec_inp], dim=1).float().to(self.device)
         # encoder - decoder
         if self.args.use_amp:
