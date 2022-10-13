@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# Obsismc: Distill module, that is conv1D and MaxPool
 class ConvLayer(nn.Module):
     def __init__(self, c_in):
         super(ConvLayer, self).__init__()
@@ -11,11 +12,12 @@ class ConvLayer(nn.Module):
                                   kernel_size=3,
                                   padding=padding,
                                   padding_mode='circular')
-        self.norm = nn.BatchNorm1d(c_in)
+        self.norm = nn.BatchNorm1d(c_in)  # Obsismc: batchnorm, not layernorm
         self.activation = nn.ELU()
         self.maxPool = nn.MaxPool1d(kernel_size=3, stride=2, padding=1)
 
     def forward(self, x):
+        # Obsismc: x (B,L,D)
         x = self.downConv(x.permute(0, 2, 1))
         x = self.norm(x)
         x = self.activation(x)
@@ -23,6 +25,7 @@ class ConvLayer(nn.Module):
         x = x.transpose(1,2)
         return x
 
+# Obsismc: only for attention, corresponding to "Attention Block + Conv1d" in paper's figure 3
 class EncoderLayer(nn.Module):
     def __init__(self, attention, d_model, d_ff=None, dropout=0.1, activation="relu"):
         super(EncoderLayer, self).__init__()
@@ -45,14 +48,16 @@ class EncoderLayer(nn.Module):
             x, x, x,
             attn_mask = attn_mask
         )
-        x = x + self.dropout(new_x)
+        x = x + self.dropout(new_x)  # Obsismc: resnet seems not be mentioned in paper
 
         y = x = self.norm1(x)
+        # Obsismc: project to a dimension with a shape the same as the original one
         y = self.dropout(self.activation(self.conv1(y.transpose(-1,1))))
         y = self.dropout(self.conv2(y).transpose(-1,1))
 
         return self.norm2(x+y), attn
 
+# Obsismc: the whole encoder with multiple distill attention
 class Encoder(nn.Module):
     def __init__(self, attn_layers, conv_layers=None, norm_layer=None):
         super(Encoder, self).__init__()
