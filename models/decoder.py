@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+# Obsismc: contains a distill attention and a cross_attention (full attention)
 class DecoderLayer(nn.Module):
     def __init__(self, self_attention, cross_attention, d_model, d_ff=None,
                  dropout=0.1, activation="relu"):
@@ -30,6 +31,7 @@ class DecoderLayer(nn.Module):
         )[0])
 
         y = x = self.norm2(x)
+        # Obsismc: just for projecting into another space with the same dimension
         y = self.dropout(self.activation(self.conv1(y.transpose(-1,1))))
         y = self.dropout(self.conv2(y).transpose(-1,1))
 

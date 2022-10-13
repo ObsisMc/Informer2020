@@ -18,7 +18,7 @@ class FullAttention(nn.Module):
         self.dropout = nn.Dropout(attention_dropout)
 
     def forward(self, queries, keys, values, attn_mask):
-        B, L, H, E = queries.shape
+        B, L, H, E = queries.shape  # Obsismc: H the number of heads, E the number of features of each head
         _, S, _, D = values.shape
         scale = self.scale or 1. / sqrt(E)
 
@@ -27,7 +27,7 @@ class FullAttention(nn.Module):
             if attn_mask is None:
                 attn_mask = TriangularCausalMask(B, L, device=queries.device)
 
-            scores.masked_fill_(attn_mask.mask, -np.inf)
+            scores.masked_fill_(attn_mask.mask, -np.inf) # Obsismc: mask upper right part
 
         A = self.dropout(torch.softmax(scale * scores, dim=-1))
         V = torch.einsum("bhls,bshd->blhd", A, values)
@@ -88,7 +88,7 @@ class ProbAttention(nn.Module):
             contex = V_sum.unsqueeze(-2).expand(B, H, L_Q, V_sum.shape[-1]).clone()
         else:  # use mask
             assert (L_Q == L_V)  # requires that L_Q == L_V, i.e. for self-attention only
-            contex = V.cumsum(dim=-2)
+            contex = V.cumsum(dim=-2)  # Obsismc: there is layernorm at the end, which can get approximate mean
         return contex
 
     def _update_context(self, context_in, V, scores, index, L_Q, attn_mask):

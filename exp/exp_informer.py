@@ -271,7 +271,7 @@ class Exp_Informer(Exp_Basic):
             dec_inp = torch.zeros([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
         elif self.args.padding==1:
             dec_inp = torch.ones([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
-        # Obsismc: mask the part needed to predict
+        # Obsismc: mask the part needed to predict, dec_inp (b, label_len+pre_len, N)
         dec_inp = torch.cat([batch_y[:,:self.args.label_len,:], dec_inp], dim=1).float().to(self.device)
         # encoder - decoder
         if self.args.use_amp:
