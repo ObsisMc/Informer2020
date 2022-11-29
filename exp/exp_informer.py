@@ -1,6 +1,6 @@
 from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred
 from exp.exp_basic import Exp_Basic
-from models.model import Informer, InformerStack
+from models.model import Informer, InformerStack, WInformer
 
 from utils.tools import EarlyStopping, adjust_learning_rate
 from utils.metrics import metric
@@ -28,9 +28,10 @@ class Exp_Informer(Exp_Basic):
         model_dict = {
             'informer': Informer,
             'informerstack': InformerStack,
+            'winformer': WInformer
         }
-        if self.args.model == 'informer' or self.args.model == 'informerstack':
-            e_layers = self.args.e_layers if self.args.model == 'informer' else self.args.s_layers
+        if self.args.model == 'informer' or self.args.model == 'informerstack' or self.args.model == 'winformer':
+            e_layers = self.args.e_layers if self.args.model == 'informer' or self.args.model == 'winformer' else self.args.s_layers
             model = model_dict[self.args.model](
                 self.args.enc_in,
                 self.args.dec_in,
@@ -103,6 +104,17 @@ class Exp_Informer(Exp_Basic):
             freq=freq,
             cols=args.cols,
             pred_idx=pred_idx
+        ) if Data.__class__.__name__ == "Dataset_Pred" else Data(
+            root_path=args.root_path,
+            data_path=args.data_path,
+            flag=flag,
+            size=[args.seq_len, args.label_len, args.pred_len],
+            features=args.features,
+            target=args.target,
+            inverse=args.inverse,
+            timeenc=timeenc,
+            freq=freq,
+            cols=args.cols
         )
         print(flag, len(data_set))
         data_loader = DataLoader(
@@ -285,7 +297,7 @@ class Exp_Informer(Exp_Basic):
             dec_inp = torch.ones([batch_y.shape[0], self.args.pred_len, batch_y.shape[-1]]).float()
 
         # Obsismc: mask the part needed to predict, dec_inp (b, label_len+pre_len, N)
-        dec_inp = torch.cat([batch_y[:,:self.args.label_len,:], dec_inp], dim=1).float().to(self.device)
+        dec_inp = torch.cat([batch_y[:, :self.args.label_len, :], dec_inp], dim=1).float().to(self.device)
         # encoder - decoder
         if self.args.use_amp:
             with torch.cuda.amp.autocast():

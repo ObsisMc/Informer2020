@@ -7,6 +7,7 @@ import numpy as np
 from math import sqrt
 from utils.masking import TriangularCausalMask, ProbMask
 
+# Obsismc: Pay attention! distilling is in encoder,  not in attention modules
 
 # Obsismc: original Transformer
 class FullAttention(nn.Module):
@@ -27,7 +28,7 @@ class FullAttention(nn.Module):
             if attn_mask is None:
                 attn_mask = TriangularCausalMask(B, L, device=queries.device)
 
-            scores.masked_fill_(attn_mask.mask, -np.inf) # Obsismc: mask upper right part
+            scores.masked_fill_(attn_mask.mask, -np.inf)  # Obsismc: mask upper right part
 
         A = self.dropout(torch.softmax(scale * scores, dim=-1))
         V = torch.einsum("bhls,bshd->blhd", A, values)

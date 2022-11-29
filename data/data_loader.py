@@ -283,7 +283,7 @@ class Dataset_Custom(Dataset):
         # [r_begin, r_end] for decoder, label is X_label in paper? len is "label_len + pred_len"
         s_begin = index
         s_end = s_begin + self.seq_len
-        r_begin = s_end - self.label_len
+        r_begin = s_end - self.label_len  # Obsismc: label_len is from seq_len
         r_end = r_begin + self.label_len + self.pred_len
 
         seq_x = self.data_x[s_begin:s_end]

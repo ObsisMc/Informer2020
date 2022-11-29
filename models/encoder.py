@@ -25,7 +25,7 @@ class ConvLayer(nn.Module):
         x = x.transpose(1,2)
         return x
 
-# Obsismc: only for attention, corresponding to "Attention Block + Conv1d" in paper's figure 3
+# Obsismc: only for attention, no distilling
 class EncoderLayer(nn.Module):
     def __init__(self, attention, d_model, d_ff=None, dropout=0.1, activation="relu"):
         super(EncoderLayer, self).__init__()
@@ -48,6 +48,7 @@ class EncoderLayer(nn.Module):
             x, x, x,
             attn_mask = attn_mask
         )
+        # print(new_x.shape)
         x = x + self.dropout(new_x)  # Obsismc: resnet seems not be mentioned in paper
 
         y = x = self.norm1(x)
@@ -70,7 +71,7 @@ class Encoder(nn.Module):
         attns = []
         if self.conv_layers is not None:
             for attn_layer, conv_layer in zip(self.attn_layers, self.conv_layers):
-                x, attn = attn_layer(x, attn_mask=attn_mask)
+                x, attn = attn_layer(x, attn_mask=attn_mask)  # Obsismc: [B, L, D]
                 x = conv_layer(x)
                 attns.append(attn)
             x, attn = self.attn_layers[-1](x, attn_mask=attn_mask)
