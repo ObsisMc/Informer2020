@@ -1,6 +1,6 @@
 from data.data_loader import Dataset_ETT_hour, Dataset_ETT_minute, Dataset_Custom, Dataset_Pred
 from exp.exp_basic import Exp_Basic
-from models.model import Informer, InformerStack, WInformer
+from models.model import Informer, InformerStack, WInformer, WAutoCorrelation,Yinformer
 
 from utils.tools import EarlyStopping, adjust_learning_rate
 from utils.metrics import metric
@@ -28,10 +28,12 @@ class Exp_Informer(Exp_Basic):
         model_dict = {
             'informer': Informer,
             'informerstack': InformerStack,
-            'winformer': WInformer
+            'winformer': WInformer,
+            "wautocorrelation": WAutoCorrelation,
+            'yinformer': Yinformer
         }
-        if self.args.model == 'informer' or self.args.model == 'informerstack' or self.args.model == 'winformer':
-            e_layers = self.args.e_layers if self.args.model == 'informer' or self.args.model == 'winformer' else self.args.s_layers
+        if self.args.model in model_dict:
+            e_layers = self.args.e_layers if self.args.model != 'informerstack' else self.args.s_layers
             model = model_dict[self.args.model](
                 self.args.enc_in,
                 self.args.dec_in,
